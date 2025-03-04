@@ -68,6 +68,12 @@ local SaveManager = {} do
 		},
 	}
 
+	function SaveManager:SetIgnoreIndexes(list)
+		for _, key in next, list do
+			self.Ignore[key] = true
+		end
+	end
+
 	function SaveManager:Save()
 		local fullPath = `{self.Folder}/settings/{game.Players.LocalPlayer.Name}.json`
 
@@ -147,6 +153,7 @@ local SaveManager = {} do
 		return nil
 	end
 
+	SaveManager:SetIgnoreIndexes({"InterfaceManager_InterfaceTheme", "InterfaceManager_TransparentToggle", "InterfaceManager_MenuKeybind", "InterfaceManager_JobID", "InterfaceManager_WhiteScreenToggle"})
 	SaveManager:BuildFolderTree()
 end
 
