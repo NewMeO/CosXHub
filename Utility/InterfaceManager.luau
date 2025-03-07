@@ -3,7 +3,7 @@ local runService = game:GetService("RunService")
 local teleportService = game:GetService("TeleportService")
 
 local InterfaceManager = {} do
-    InterfaceManager.Executor = identifyexecutor and identifyexecutor() or "Unknown"
+    InterfaceManager.IsFreeExecutor = identifyexecutor and identifyexecutor() == "Velocity" and "Window" or "CreatedWindow"
 	InterfaceManager.Folder = "FluentRenewedSettings"
 
     InterfaceManager.Settings = {
@@ -157,56 +157,29 @@ local InterfaceManager = {} do
 		})
 
         InterfaceTheme:SetValue(Settings.Theme)
-        local MenuKeybind
 
-        if self.Executor == "Velocity" or self.Executor == "Xeno" or self.Executor == "Ronix" then
-            section:AddSlider("InterfaceManager_Transparent", {
-                Title = "Background Transparency",
-                Description = "Adjusts the transparency of the interface background.",
-                Default = Settings.Transparency,
-                Min = 0,
-                Max = 1,
-                Rounding = 2,
-                Callback = function(Value)
-                    Library.Window.AcrylicPaint.Frame.Background.BackgroundTransparency = Value
-                    Settings.Transparency = Value
-                    InterfaceManager:SaveSettings()
-                end
-            })
-
-            MenuKeybind = section:AddKeybind("InterfaceManager_MenuKeybind", {
-                Title = "Minimize Bind",
-                Mode = "Toggle",
-                Default = "LeftControl",
-                Description = "Set the key to toggle the interface's visibility.",
-                ChangedCallback = function(Value)
-                    Settings.MenuKeybind = Value
-                end
-            })
-        else
-            section:AddSlider("InterfaceManager_Transparent", {
-                Title = "Background Transparency",
-                Description = "Adjusts the transparency of the interface background.",
-                Default = Settings.Transparency,
-                Min = 0,
-                Max = 1,
-                Rounding = 2,
-                Callback = function(Value)
-                    Library.CreatedWindow.AcrylicPaint.Frame.Background.BackgroundTransparency = Value
-                    Settings.Transparency = Value
-                    InterfaceManager:SaveSettings()
-                end
-            })
-        
-            MenuKeybind = section:AddKeybind("InterfaceManager_MenuKeybind", {
-                Title = "Minimize Bind",
-                Description = "Set the key to toggle the interface's visibility.",
-                Default = Settings.MenuKeybind,
-                ChangedCallback = function(Value)
-                    Settings.MenuKeybind = Value
-                end
-            })
-        end
+        section:AddSlider("InterfaceManager_Transparent", {
+            Title = "Background Transparency",
+            Description = "Adjusts the transparency of the interface background.",
+            Default = Settings.Transparency,
+            Min = 0,
+            Max = 1,
+            Rounding = 2,
+            Callback = function(Value)
+                Library[InterfaceManager.IsFreeExecutor].AcrylicPaint.Frame.Background.BackgroundTransparency = Value
+                Settings.Transparency = Value
+                InterfaceManager:SaveSettings()
+            end
+        })
+    
+        local MenuKeybind = section:AddKeybind("InterfaceManager_MenuKeybind", {
+            Title = "Minimize Bind",
+            Description = "Set the key to toggle the interface's visibility.",
+            Default = "LeftControl",
+            ChangedCallback = function(Value)
+                Settings.MenuKeybind = Value
+            end
+        })
 
         Library.MinimizeKeybind = MenuKeybind
     end
