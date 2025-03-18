@@ -1075,10 +1075,10 @@ getgenv().loaded = true
             end)
             
             if not self.selected_tab then 
-                cfg.open_tab(true) 
+                cfg.open_tab(true)
             end
 
-            return unpack(cfg.pages)
+            return #cfg.pages > 1 and cfg.pages or unpack(cfg.pages)
         end
 
         function library:seperator(properties)
@@ -3568,8 +3568,31 @@ getgenv().loaded = true
             local column = main:column({})
             local section = column:section({name = "Settings", side = "right", size = 1, default = true, icon = "rbxassetid://129380150574313"})
             section:textbox({name = "Config name:", flag = "config_name_text"})
-            section:button({name = "Save", callback = function() writefile(library.directory .. "/configs/" .. flags["config_name_text"] or flags["config_name_list"] .. ".cfg", library:get_config()) library:update_config_list() notifications:create_notification({name = "Configs", info = "Saved config to:\n" .. flags["config_name_list"] or flags["config_name_text"]}) end}) 
-            section:button({name = "Load", callback = function() library:load_config(readfile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg"))  library:update_config_list() notifications:create_notification({name = "Configs", info = "Loaded config:\n" .. flags["config_name_list"]}) end})
+            -- section:button({
+            --     name = "Save",
+            --     callback = function()
+
+            --     end
+            -- )}
+
+
+            
+            section:button({
+                name = "Save", 
+                callback = function() 
+                    writefile(library.directory .. "/configs/" .. flags["config_name_text"] .. ".cfg", library:get_config())
+                    library:update_config_list()
+                    notifications:create_notification({name = "Configs", info = "Saved config to:\n" .. flags["config_name_text"] or flags["config_name_list"]})
+                end
+            }) 
+            section:button({
+                name = "Load", 
+                callback = function()
+                    library:load_config(readfile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg"))
+                    library:update_config_list()
+                    notifications:create_notification({name = "Configs", info = "Loaded config:\n" .. flags["config_name_list"]})
+                end
+            })
             section:button({name = "Delete", callback = function() delfile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg")  library:update_config_list() notifications:create_notification({name = "Configs", info = "Deleted config:\n" .. flags["config_name_list"]}) end})
             section:colorpicker({name = "Menu Accent", callback = function(color, alpha) library:update_theme("accent", color) end, color = themes.preset.accent})
             section:keybind({name = "Menu Bind", callback = function(bool) window.toggle_menu(bool) end, default = true, key = Enum.KeyCode.LeftControl })
