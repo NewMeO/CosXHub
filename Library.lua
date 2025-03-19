@@ -775,7 +775,7 @@ getgenv().loaded = true
                     Size = dim2(0, 80, 0, 30);
                     BackgroundColor3 = rgb(30, 30, 30);
                     BackgroundTransparency = 0.35;
-                    Text = "Hide UI";
+                    Text = "CosX";
                     TextColor3 = rgb(255, 255, 255);
                     BorderSizePixel = 0;
                     FontFace = fonts.font;
@@ -788,7 +788,6 @@ getgenv().loaded = true
                 });
 
                 items[ "mobile" ].MouseButton1Click:Connect(function()
-                    items[ "mobile" ].Text = not library[ "items" ].Enabled and "Hide UI" or "Show UI"
                     cfg.toggle_menu(not library[ "items" ].Enabled)
                 end)
             end
