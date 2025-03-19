@@ -558,28 +558,6 @@ getgenv().loaded = true
             }); 
 
             local items = cfg.items; do
-                items[ "mobile" ] = library:create( "TextButton" , {
-                    Parent = library[ "mobileholder" ];
-                    Name = "\0";
-                    BackgroundTransparency = 1;
-                    AutoButtonColor = false;
-                    AnchorPoint = vec2(0.5, 0.5);
-                    Position = dim2(0.5, 0, 0, 30);
-                    Size = dim2(0, 80, 0, 30);
-                    BackgroundColor3 = rgb(30, 30, 30);
-                    BackgroundTransparency = 0.35;
-                    Text = "Show UI";
-                    TextColor3 = rgb(255, 255, 255);
-                    BorderSizePixel = 0;
-                    FontFace = fonts.font;
-                    TextSize = 14;
-                });
-
-                library:create( "UICorner" , {
-                    Parent = items["mobile"];
-                    CornerRadius = dim(0, 8)
-                });
-
                 items[ "main" ] = library:create( "Frame" , {
                     Parent = library[ "items" ];
                     Size = cfg.size;
@@ -782,27 +760,43 @@ getgenv().loaded = true
                 -- }); library:apply_theme(items[ "other_info" ], "accent", "TextColor3");        
             end 
 
+            function cfg.toggle_menu(bool) 
+                library[ "items" ].Enabled = bool
+            end
+
+            if library:get_os() == "Mobile" then
+                items[ "mobile" ] = library:create( "TextButton" , {
+                    Parent = library[ "mobileholder" ];
+                    Name = "\0";
+                    BackgroundTransparency = 1;
+                    AutoButtonColor = false;
+                    AnchorPoint = vec2(0.5, 0.5);
+                    Position = dim2(0.5, 0, 0, 30);
+                    Size = dim2(0, 80, 0, 30);
+                    BackgroundColor3 = rgb(30, 30, 30);
+                    BackgroundTransparency = 0.35;
+                    Text = "Hide UI";
+                    TextColor3 = rgb(255, 255, 255);
+                    BorderSizePixel = 0;
+                    FontFace = fonts.font;
+                    TextSize = 14;
+                });
+
+                library:create( "UICorner" , {
+                    Parent = items["mobile"];
+                    CornerRadius = dim(0, 8)
+                });
+
+                items[ "mobile" ].MouseButton1Click:Connect(function()
+                    items[ "mobile" ].Text = not library[ "items" ].Enabled and "Hide UI" or "Show UI"
+                    cfg.toggle_menu(not library[ "items" ].Enabled)
+                end)
+            end
+
             do -- Other
                 library:draggify(items[ "main" ])
                 library:resizify(items[ "main" ])
             end 
-
-            function cfg.toggle_menu(bool) 
-                -- WIP 
-                -- if cfg.tween then 
-                --     cfg.tween:Cancel()
-                -- end 
-
-                -- items[ "main" ].Size = dim2(items[ "main" ].Size.Scale.X, items[ "main" ].Size.Offset.X - 20, items[ "main" ].Size.Scale.Y, items[ "main" ].Size.Offset.Y - 20)
-                -- library:tween(items[ "tab_holder" ], {Size = dim2(1, -196, 1, -81)}, Enum.EasingStyle.Quad, 0.4)
-                -- cfg.tween = 
-                
-                library[ "items" ].Enabled = bool
-            end
-
-            items[ "mobile" ].MouseButton1Click:Connect(function()
-                cfg.toggle_menu(not library[ "items" ].Enabled)
-            end)
                 
             return setmetatable(cfg, library)
         end 
