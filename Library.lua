@@ -296,6 +296,24 @@ getgenv().loaded = true
             return (y_cond and x_cond)
         end
 
+        function library:get_os()
+            local OSName = "Unknown"
+        
+            if gui_service:IsTenFootInterface() then
+                local L2Button_Name = uis:GetStringForKeyCode(Enum.KeyCode.ButtonL2)
+        
+                OSName = if L2Button_Name == "ButtonLT" then "Xbox" elseif L2Button_Name == "ButtonL2" then "PlayStation" else "Console"
+            elseif gui_service.IsWindows then
+                OSName = "Windows"
+            elseif version():find("^0.") == 1 then
+                OSName = "macOS"
+            elseif version():find("^2.") == 1 then
+                OSName = uis.VREnabled and "MetaHorizon" or "Mobile"
+            end
+        
+            return OSName
+        end
+
         function library:draggify(frame)
             local dragging = false 
             local start_size = frame.Position
@@ -485,6 +503,10 @@ getgenv().loaded = true
                 library[ "items" ]:Destroy()
             end
 
+            if library[ "mobileholder" ] then 
+                library[ "mobileholder" ]:Destroy()
+            end
+
             if library[ "other" ] then 
                 library[ "other" ]:Destroy()
             end 
@@ -518,6 +540,14 @@ getgenv().loaded = true
                 ZIndexBehavior = Enum.ZIndexBehavior.Global;
                 IgnoreGuiInset = true;
             });
+
+            library[ "mobileholder" ] = library:create( "ScreenGui" , {
+                Parent = coregui;
+                Name = "\0";
+                Enabled = true;
+                ZIndexBehavior = Enum.ZIndexBehavior.Global;
+                IgnoreGuiInset = true;
+            });
             
             library[ "other" ] = library:create( "ScreenGui" , {
                 Parent = coregui;
@@ -528,6 +558,28 @@ getgenv().loaded = true
             }); 
 
             local items = cfg.items; do
+                items[ "mobile" ] = library:create( "TextButton" , {
+                    Parent = library[ "mobileholder" ];
+                    Name = "\0";
+                    BackgroundTransparency = 1;
+                    AutoButtonColor = false;
+                    AnchorPoint = vec2(0.5, 0.5);
+                    Position = dim2(0.5, 0, 0, 30);
+                    Size = dim2(0, 80, 0, 30);
+                    BackgroundColor3 = rgb(30, 30, 30);
+                    BackgroundTransparency = 0.35;
+                    Text = "Show UI";
+                    TextColor3 = rgb(255, 255, 255);
+                    BorderSizePixel = 0;
+                    FontFace = fonts.font;
+                    TextSize = 14;
+                });
+
+                library:create( "UICorner" , {
+                    Parent = items["mobile"];
+                    CornerRadius = dim(0, 8)
+                });
+
                 items[ "main" ] = library:create( "Frame" , {
                     Parent = library[ "items" ];
                     Size = cfg.size;
@@ -746,7 +798,11 @@ getgenv().loaded = true
                 -- cfg.tween = 
                 
                 library[ "items" ].Enabled = bool
-            end 
+            end
+
+            items[ "mobile" ].MouseButton1Click:Connect(function()
+                cfg.toggle_menu(not library[ "items" ].Enabled)
+            end)
                 
             return setmetatable(cfg, library)
         end 
@@ -3568,15 +3624,6 @@ getgenv().loaded = true
             local column = main:column({})
             local section = column:section({name = "Settings", side = "right", size = 1, default = true, icon = "rbxassetid://129380150574313"})
             section:textbox({name = "Config name:", flag = "config_name_text"})
-            -- section:button({
-            --     name = "Save",
-            --     callback = function()
-
-            --     end
-            -- )}
-
-
-            
             section:button({
                 name = "Save", 
                 callback = function() 
