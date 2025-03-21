@@ -316,46 +316,40 @@ getgenv().loaded = true
         end
 
         function library:draggify(frame)
-            local dragging = false 
-            local start_size = frame.Position
-            local start 
+            local dragging, dragInput, dragStart, startPos
+
+            local function update(input)
+                local delta = input.Position - dragStart
+
+                library:tween(frame, {Position = dim2(
+                    startPos.X.Scale, startPos.X.Offset + delta.X,
+                    startPos.Y.Scale, startPos.Y.Offset + delta.Y
+                )}, Enum.EasingStyle.Linear, 0.05)
+            end
 
             frame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = true
-                    start = input.Position
-                    start_size = frame.Position
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging  = true
+                    dragStart = input.Position
+                    startPos  = frame.Position
+
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                        end
+                    end)
                 end
             end)
 
-            frame.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = false
+            frame.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                    dragInput = input
                 end
             end)
 
-            library:connection(uis.InputChanged, function(input, game_event) 
-                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    local viewport_x = camera.ViewportSize.X
-                    local viewport_y = camera.ViewportSize.Y
-
-                    local current_position = dim2(
-                        0,
-                        clamp(
-                            start_size.X.Offset + (input.Position.X - start.X),
-                            0,
-                            viewport_x - frame.Size.X.Offset
-                        ),
-                        0,
-                        math.clamp(
-                            start_size.Y.Offset + (input.Position.Y - start.Y),
-                            0,
-                            viewport_y - frame.Size.Y.Offset
-                        )
-                    )
-
-                    library:tween(frame, {Position = current_position}, Enum.EasingStyle.Linear, 0.05)
-                    library:close_element()
+            library:connection(uis.InputChanged, function(input, game_event)
+                if dragging then
+                    update(input)
                 end
             end)
         end 
@@ -792,11 +786,12 @@ getgenv().loaded = true
                     Size = dim2(0, 80, 0, 30);
                     BackgroundColor3 = rgb(30, 30, 30);
                     BackgroundTransparency = 0.35;
-                    Text = "Hide UI";
+                    Text = "CosX";
                     TextColor3 = rgb(255, 255, 255);
                     BorderSizePixel = 0;
                     FontFace = fonts.font;
                     TextSize = 14;
+                    ZIndex = 99;
                 });
 
                 library:create( "UICorner" , {
@@ -805,7 +800,6 @@ getgenv().loaded = true
                 });
 
                 items[ "mobile" ].MouseButton1Click:Connect(function()
-                    items[ "mobile" ].Text = not library[ "items" ].Enabled and "Hide UI" or "Show UI"
                     cfg.toggle_menu(not library[ "items" ].Enabled)
                 end)
             end
@@ -1942,7 +1936,7 @@ getgenv().loaded = true
             end)
 
             library:connection(uis.InputChanged, function(input)
-                if cfg.dragging and input.UserInputType == Enum.UserInputType.MouseMovement then 
+                if cfg.dragging and input.UserInputType == Enum.UserInputType.Touch then 
                     local size_x = (input.Position.X - items[ "slider" ].AbsolutePosition.X) / items[ "slider" ].AbsoluteSize.X
                     local value = ((cfg.max - cfg.min) * size_x) + cfg.min
                     cfg.set(value)
@@ -1950,13 +1944,13 @@ getgenv().loaded = true
             end)
 
             library:connection(uis.InputEnded, function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     cfg.dragging = false
                     library:tween(items[ "value" ], {TextColor3 = rgb(72, 72, 73)}, Enum.EasingStyle.Quad, 0.2) 
                 end 
             end)
 
-            if cfg.seperator then 
+            if cfg.seperator then
                 library:create( "Frame" , {
                     AnchorPoint = vec2(0, 1);
                     Parent = self.items[ "elements" ];
@@ -3675,7 +3669,6 @@ getgenv().loaded = true
             
             local column = main:column({})
             local section = column:section({name = "Settings", side = "right", size = 1, default = true, icon = "rbxassetid://129380150574313"})
-            -- section:toggle({ flag = "AutoLoadConfig", name = "Auto Load Config", seperator = true })
             section:toggle({ name = "White Screen", seperator = true, callback = function(bool) run:Set3dRenderingEnabled(not bool) end })
             section:colorpicker({name = "Menu Accent", callback = function(color, alpha) library:update_theme("accent", color) end, color = themes.preset.accent})
             section:keybind({name = "Menu Bind", callback = function(bool) window.toggle_menu(bool) end, default = true, key = Enum.KeyCode.LeftControl })
