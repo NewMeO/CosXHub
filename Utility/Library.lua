@@ -544,6 +544,7 @@ getgenv().loaded = true
                 Enabled = true;
                 ZIndexBehavior = Enum.ZIndexBehavior.Global;
                 IgnoreGuiInset = true;
+                DisplayOrder = 999;
             });
             
             library[ "other" ] = library:create( "ScreenGui" , {
@@ -791,7 +792,6 @@ getgenv().loaded = true
                     BorderSizePixel = 0;
                     FontFace = fonts.font;
                     TextSize = 14;
-                    ZIndex = 99;
                 });
 
                 library:create( "UICorner" , {
@@ -802,6 +802,8 @@ getgenv().loaded = true
                 items[ "mobile" ].MouseButton1Click:Connect(function()
                     cfg.toggle_menu(not library[ "items" ].Enabled)
                 end)
+
+                library:draggify(items[ "mobile" ])
             end
 
             do -- Other
