@@ -88,7 +88,7 @@ getgenv().loaded = true
 
     local themes = {
         preset = {
-            accent = rgb(155, 150, 219),
+            accent = rgb(10, 153, 255),
         }, 
 
         utility = {
@@ -521,7 +521,7 @@ getgenv().loaded = true
                 suffix = properties.suffix or properties.Suffix or "tech";
                 name = properties.name or properties.Name or "nebula";
                 game_name = properties.gameInfo or properties.game_info or properties.GameInfo or "Milenium for Counter-Strike: Global Offensive";
-                size = properties.size or properties.Size or dim2(0, 600, 0, 470);
+                size = properties.size or properties.Size or dim2(0, 700, 0, 470);
                 vip = properties.vip or properties.vip or false;
                 selected_tab;
                 items = {};
@@ -1762,7 +1762,9 @@ getgenv().loaded = true
 
                 dragging = false,
                 items = {}
-            } 
+            }
+            value = math.clamp(cfg.value, cfg.min, cfg.max)
+            local delta = (value - cfg.min) / (cfg.max - cfg.min)
 
             flags[cfg.flag] = cfg.default
 
@@ -1867,7 +1869,7 @@ getgenv().loaded = true
                     Name = "\0";
                     Parent = items[ "slider" ];
                     BorderColor3 = rgb(0, 0, 0);
-                    Size = dim2(0.5, 0, 0, 4);
+                    Size = dim2(delta, 0, 0, 4);
                     BorderSizePixel = 0;
                     BackgroundColor3 = themes.preset.accent
                 });  library:apply_theme(items[ "fill" ], "accent", "BackgroundColor3");
@@ -1902,7 +1904,7 @@ getgenv().loaded = true
                     FontFace = fonts.small;
                     TextColor3 = rgb(72, 72, 73);
                     BorderColor3 = rgb(0, 0, 0);
-                    Text = "50%";
+                    Text = tostring(cfg.value) .. cfg.suffix;
                     Parent = items[ "slider_object" ];
                     Name = "\0";
                     Size = dim2(1, 0, 0, 0);
@@ -1920,36 +1922,57 @@ getgenv().loaded = true
                     PaddingRight = dim(0, 5);
                     PaddingLeft = dim(0, 5)
                 });                
-            end 
-
-            function cfg.set(value)
-                cfg.value = clamp(library:round(value, cfg.intervals), cfg.min, cfg.max)
-
-                library:tween(items[ "fill" ], {Size = dim2((cfg.value - cfg.min) / (cfg.max - cfg.min), cfg.value == cfg.min and 0 or -4, 0, 2)}, Enum.EasingStyle.Linear, 0.05)
-                items[ "value" ].Text = tostring(cfg.value) .. cfg.suffix
-
-                flags[cfg.flag] = cfg.value
-                cfg.callback(flags[cfg.flag])
             end
 
-            items[ "slider" ].MouseButton1Down:Connect(function()
-                cfg.dragging = true 
-                library:tween(items[ "value" ], {TextColor3 = rgb(255, 255, 255)}, Enum.EasingStyle.Quad, 0.2)
-            end)
+            local HoldingSlider = false
 
-            library:connection(uis.InputChanged, function(input)
-                if cfg.dragging and input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then 
-                    local size_x = (input.Position.X - items[ "slider" ].AbsolutePosition.X) / items[ "slider" ].AbsoluteSize.X
-                    local value = ((cfg.max - cfg.min) * size_x) + cfg.min
-                    cfg.set(value)
+            function cfg.set(value, input)
+                if not HoldingSlider and (not input or (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch)) then
+                    value = math.clamp(value, cfg.min, cfg.max)
+                    local delta = (value - cfg.min) / (cfg.max - cfg.min)
+                    value = math.floor((cfg.min + delta * (cfg.max - cfg.min)) / cfg.intervals + 0.5) * cfg.intervals
+                    
+                    if value ~= cfg.value then
+                        cfg.value = value
+                        items["fill"].Size = dim2(delta, 0, 0, 4)
+                        items["value"].Text = tostring(cfg.value) .. cfg.suffix
+                        flags[cfg.flag] = cfg.value
+                        cfg.callback(cfg.value)
+                    end
+                    
+                    if input then
+                        local isTouch = (input.UserInputType == Enum.UserInputType.Touch)
+                        HoldingSlider = true
+                        local moveConnection
+                        local releaseConnection
+                        
+                        moveConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                            local inputPosition = isTouch and input.Position.X or game:GetService("UserInputService"):GetMouseLocation().X
+                            local relativePosition = math.clamp((inputPosition - items["slider"].AbsolutePosition.X) / items["slider"].AbsoluteSize.X, 0, 1)
+                            local newValue = math.floor((cfg.min + relativePosition * (cfg.max - cfg.min)) / cfg.intervals + 0.5) * cfg.intervals
+                            
+                            if newValue ~= cfg.value then
+                                cfg.value = newValue
+                                items["fill"].Size = dim2(relativePosition, 0, 0, 4)
+                                items["value"].Text = tostring(cfg.value) .. cfg.suffix
+                                flags[cfg.flag] = cfg.value
+                                cfg.callback(cfg.value)
+                            end
+                        end)
+                        
+                        releaseConnection = game:GetService("UserInputService").InputEnded:Connect(function(endInput)
+                            if endInput.UserInputType == Enum.UserInputType.MouseButton1 or endInput.UserInputType == Enum.UserInputType.Touch then
+                                moveConnection:Disconnect()
+                                releaseConnection:Disconnect()
+                                HoldingSlider = false
+                            end
+                        end)
+                    end
                 end
-            end)
+            end
 
-            library:connection(uis.InputEnded, function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    cfg.dragging = false
-                    library:tween(items[ "value" ], {TextColor3 = rgb(72, 72, 73)}, Enum.EasingStyle.Quad, 0.2) 
-                end 
+            items[ "slider" ].InputBegan:Connect(function(input)
+                cfg.set(cfg.value, input)
             end)
 
             if cfg.seperator then
@@ -1968,7 +1991,7 @@ getgenv().loaded = true
             config_flags[cfg.flag] = cfg.set
 
             return setmetatable(cfg, library)
-        end 
+        end
 
         function library:dropdown(options) 
             local cfg = {
