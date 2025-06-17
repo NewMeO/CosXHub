@@ -1,6 +1,6 @@
 _G.Settings = {
-    JobId = "e8f700d8-b3d8-49fd-9bff-bca6f617fc3a",
-    Username = "Vikkylol7772",
+    JobId = "f8f1c69d-dafb-4a7a-b287-455d675f495d",
+    Username = "Mariansce5490",
     Items = {
         { Name = "ChangeCreatureColorsToken", ItemType = "Tokens" },
         { Name = "CreatureReviveToken", ItemType = "Tokens" },
